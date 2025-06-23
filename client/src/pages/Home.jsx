@@ -18,43 +18,32 @@ export default function Home() {
     "https://www.ststechnicaljobs.com/wp-content/uploads/2024/01/Harnessing-AI-to-Elevate-Your-Resume-A-Guide-for-Job-Seekers.jpg",
   ];
 
-  // Slideshow effect
+ const [showVoicePrompt, setShowVoicePrompt] = useState(false);
+
 useEffect(() => {
-  if (user?.firstName && typeof window !== "undefined") {
-    const alreadyPlayed = sessionStorage.getItem("welcomePlayed");
+  const alreadySpoken = sessionStorage.getItem("welcomePlayed");
 
-    if (!alreadyPlayed) {
-      let hasSpoken = false; // flag to avoid multiple triggers
-
-      const welcomeMessage = () => {
-        if (hasSpoken) return; // skip if already spoken
-        hasSpoken = true;
-
-        const utterance = new SpeechSynthesisUtterance(
-          `Welcome ${user.firstName}, let's build your resume with AI.`
-        );
-        utterance.lang = "en-US";
-        utterance.rate = 1;
-        utterance.pitch = 1;
-        utterance.volume = 1;
-
-        window.speechSynthesis.cancel(); // cancel any previous voice
-        window.speechSynthesis.speak(utterance);
-        sessionStorage.setItem("welcomePlayed", "true");
-
-        window.removeEventListener("click", welcomeMessage);
-        window.removeEventListener("scroll", welcomeMessage);
-      };
-
-      // Wake speechSynthesis (Chrome fix)
-      window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
-
-      // Attach only once
-      window.addEventListener("click", welcomeMessage, { once: true });
-      window.addEventListener("scroll", welcomeMessage, { once: true });
-    }
+  if (user?.firstName && !alreadySpoken) {
+    setShowVoicePrompt(true);
   }
 }, [user]);
+
+const handlePlayVoice = () => {
+  const msg = new SpeechSynthesisUtterance(
+    `Welcome ${user.firstName}, let's build your resume with AI.`
+  );
+  msg.lang = "en-US";
+  msg.pitch = 1;
+  msg.rate = 1;
+  msg.volume = 1;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(msg);
+
+  sessionStorage.setItem("welcomePlayed", "true");
+  setShowVoicePrompt(false);
+};
+
+
 
 
 
@@ -132,6 +121,7 @@ useEffect(() => {
           <p className="text-xl text-gray-600 mt-3 max-w-2xl mx-auto">
             Create stunning resumes and compelling cover letters that get you noticed
           </p>
+          
         </motion.div>
 
         {/* Robot Animation */}
@@ -159,6 +149,8 @@ useEffect(() => {
             ✍️ AI Robot is writing your Resume live...
           </motion.div>
         </motion.div>
+
+        
 
       {/* Rotating preview panel */}
         <div className="mb-16 rounded-xl overflow-hidden shadow-xl bg-white max-w-3xl mx-auto">
@@ -327,6 +319,23 @@ useEffect(() => {
               </svg>
             </a>
           </div>
+          {showVoicePrompt && (
+  <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
+    <div className="bg-white p-6 rounded-xl shadow-lg text-center">
+      <h2 className="text-lg font-bold mb-2">Welcome 👋</h2>
+      <p className="mb-4">Click to hear the welcome message</p>
+      <button
+        onClick={handlePlayVoice}
+        className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700"
+      >
+        Start
+      </button>
+    </div>
+  </div>
+)}
+
+
+
         </motion.div>
       
       
