@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { jsPDF } from "jspdf";
@@ -28,12 +26,14 @@ export default function CoverLetter() {
   const [selectedLetter, setSelectedLetter] = useState(null);
   const navigate = useNavigate();
 
+  const API_URL = "https://mern-career-canvas-2.onrender.com";
+
   // Load user's saved cover letters
   useEffect(() => {
     if (user) {
       const fetchLetters = async () => {
         try {
-          const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/coverletters/${user.id}`);
+          const response = await axios.get(`${API_URL}/api/coverletters/${user.id}`);
           setSavedLetters(response.data);
           if (response.data.length > 0) {
             setSelectedLetter(response.data[0]._id);
@@ -58,14 +58,14 @@ export default function CoverLetter() {
       let response;
       if (selectedLetter) {
         // Update existing cover letter
-        response = await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/coverletters/${selectedLetter}`, {
+        response = await axios.put(`${API_URL}/api/coverletters/${selectedLetter}`, {
           ...formData,
           userId: user.id,
           generatedLetter
         });
       } else {
         // Create new cover letter
-        response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/coverletters`, {
+        response = await axios.post(`${API_URL}/api/coverletters`, {
           ...formData,
           userId: user.id,
           generatedLetter
@@ -74,7 +74,7 @@ export default function CoverLetter() {
       }
 
       // Update the saved letters list
-      const updatedLetters = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/coverletters/${user.id}`);
+      const updatedLetters = await axios.get(`${API_URL}/api/coverletters/${user.id}`);
       setSavedLetters(updatedLetters.data);
 
       showToast('success', 'Cover letter saved successfully!');
@@ -84,60 +84,58 @@ export default function CoverLetter() {
     }
   };
 
- const generateCoverLetter = async () => {
-  setLoading(true);
-  try {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    
-    const res = await axios.post(
-      `${apiUrl}/api/gemini/coverletter`,
-      {
-        applicantName: formData.applicantName,
-        companyName: formData.companyName,
-        jobTitle: formData.jobTitle,
-        skills: formData.skills,
-        achievements: formData.achievements
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json'
+  const generateCoverLetter = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/gemini/coverletter`,
+        {
+          applicantName: formData.applicantName,
+          companyName: formData.companyName,
+          jobTitle: formData.jobTitle,
+          skills: formData.skills,
+          achievements: formData.achievements
         },
-        timeout: 30000
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          timeout: 30000
+        }
+      );
+
+      if (!res.data?.success || !res.data?.result) {
+        throw new Error(res.data?.error || 'Invalid response from server');
       }
-    );
 
-    if (!res.data?.success || !res.data?.result) {
-      throw new Error(res.data?.error || 'Invalid response from server');
+      setGeneratedLetter(res.data.result);
+      showToast('success', 'Cover letter generated successfully!');
+    } catch (error) {
+      console.error('Generation error:', error);
+      let errorMessage = 'Failed to generate cover letter';
+      
+      if (error.response) {
+        errorMessage = error.response.data?.error || 
+                      `Server error: ${error.response.status}`;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      showToast('error', errorMessage);
+    } finally {
+      setLoading(false);
     }
-
-    setGeneratedLetter(res.data.result);
-    showToast('success', 'Cover letter generated successfully!');
-  } catch (error) {
-    console.error('Generation error:', error);
-    let errorMessage = 'Failed to generate cover letter';
-    
-    if (error.response) {
-      errorMessage = error.response.data?.error || 
-                    `Server error: ${error.response.status}`;
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-
-    showToast('error', errorMessage);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const deleteCoverLetter = async () => {
     if (!selectedLetter) return;
     
     if (window.confirm('Are you sure you want to delete this cover letter?')) {
       try {
-        await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/coverletters/${selectedLetter}`);
+        await axios.delete(`${API_URL}/api/coverletters/${selectedLetter}`);
         
         // Update the saved letters list
-        const updatedLetters = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/coverletters/${user.id}`);
+        const updatedLetters = await axios.get(`${API_URL}/api/coverletters/${user.id}`);
         setSavedLetters(updatedLetters.data);
         
         if (updatedLetters.data.length > 0) {
@@ -330,46 +328,46 @@ export default function CoverLetter() {
               <div className="w-full lg:w-1/2">
                 {/* Cover Letter Selector */}
                 <div className="mb-6">
-  <label className="block text-sm font-medium text-gray-700 mb-1">Saved Cover Letters</label>
-  <div className="flex flex-col sm:flex-row gap-2">
-    <select
-      value={selectedLetter || ''}
-      onChange={(e) => {
-        const letter = savedLetters.find(l => l._id === e.target.value);
-        setSelectedLetter(e.target.value);
-        setFormData(letter);
-        setGeneratedLetter(letter.generatedLetter || "");
-      }}
-      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
-    >
-      <option value="">Select a saved cover letter</option>
-      {savedLetters.map(letter => (
-        <option key={letter._id} value={letter._id}>
-          {letter.jobTitle || 'Untitled Letter'} - {new Date(letter.updatedAt).toLocaleDateString()}
-        </option>
-      ))}
-    </select>
-    <div className="flex gap-2">
-      <button
-        onClick={() => {
-          resetForm();
-          setSelectedLetter(null);
-        }}
-        className="flex-1 sm:flex-none bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition"
-      >
-        New
-      </button>
-      {selectedLetter && (
-        <button
-          onClick={deleteCoverLetter}
-          className="flex-1 sm:flex-none bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition"
-        >
-          Delete
-        </button>
-      )}
-    </div>
-  </div>
-</div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Saved Cover Letters</label>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <select
+                      value={selectedLetter || ''}
+                      onChange={(e) => {
+                        const letter = savedLetters.find(l => l._id === e.target.value);
+                        setSelectedLetter(e.target.value);
+                        setFormData(letter);
+                        setGeneratedLetter(letter.generatedLetter || "");
+                      }}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                    >
+                      <option value="">Select a saved cover letter</option>
+                      {savedLetters.map(letter => (
+                        <option key={letter._id} value={letter._id}>
+                          {letter.jobTitle || 'Untitled Letter'} - {new Date(letter.updatedAt).toLocaleDateString()}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          resetForm();
+                          setSelectedLetter(null);
+                        }}
+                        className="flex-1 sm:flex-none bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition"
+                      >
+                        New
+                      </button>
+                      {selectedLetter && (
+                        <button
+                          onClick={deleteCoverLetter}
+                          className="flex-1 sm:flex-none bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
                 {activeSection === 'personal' && (
                   <div className="space-y-6">
@@ -662,4 +660,3 @@ export default function CoverLetter() {
     </div>
   );
 }
-

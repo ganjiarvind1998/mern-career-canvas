@@ -1,10 +1,7 @@
-
-dotenv.config(); 
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
-import openaiRoutes from './routes/gemini.js';
 import resumeRoutes from './routes/resumeRoutes.js';
 import coverLetterRoutes from './routes/coverLetterRoutes.js';
 import geminiRoutes from './routes/gemini.js';
@@ -15,16 +12,19 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',          // Local dev
+    'https://mern-career-canvas-4xnp.vercel.app'  // Vercel frontend
+  ],
   credentials: true
 }));
 app.use(express.json());
 
 // Routes
-// app.use('/api/openai', openaiRoutes);
 app.use('/api/resumes', resumeRoutes);
 app.use('/api/coverletters', coverLetterRoutes);
-app.use('/api/gemini', geminiRoutes); 
+app.use('/api/gemini', geminiRoutes);
+
 // Connect to DB and start server
 connectDB()
   .then(() => {

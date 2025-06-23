@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { jsPDF } from "jspdf";
@@ -34,7 +31,7 @@ export default function Resume() {
     if (user) {
       const fetchResumes = async () => {
         try {
-          const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/resumes/${user.id}`);
+          const response = await axios.get(`https://mern-career-canvas-2.onrender.com/api/resumes/${user.id}`);
           setSavedResumes(response.data);
           if (response.data.length > 0) {
             setSelectedResume(response.data[0]._id);
@@ -116,14 +113,14 @@ export default function Resume() {
       let response;
       if (selectedResume) {
         // Update existing resume
-        response = await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/resumes/${selectedResume}`, {
+        response = await axios.put(`https://mern-career-canvas-2.onrender.com/api/resumes/${selectedResume}`, {
           ...formData,
           userId: user.id,
           generatedResume
         });
       } else {
         // Create new resume
-        response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/resumes`, {
+        response = await axios.post(`https://mern-career-canvas-2.onrender.com/api/resumes`, {
           ...formData,
           userId: user.id,
           generatedResume
@@ -132,7 +129,7 @@ export default function Resume() {
       }
 
       // Update the saved resumes list
-      const updatedResumes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/resumes/${user.id}`);
+      const updatedResumes = await axios.get(`https://mern-career-canvas-2.onrender.com/api/resumes/${user.id}`);
       setSavedResumes(updatedResumes.data);
 
       showToast('success', 'Resume saved successfully!');
@@ -141,83 +138,76 @@ export default function Resume() {
       showToast('error', 'Failed to save resume');
     }
   };
-const generateResume = async () => {
-  setLoading(true);
-  try {
-    if (!isFormValid()) {
-      throw new Error('Please fill all required fields');
-    }
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-    const requestData = {
-      fullName: formData.fullName,
-      email: formData.email,
-      phone: formData.phone,
-      address: formData.address,
-      summary: formData.summary,
-      experiences: formData.experiences.map(exp => ({
-        jobTitle: exp.jobTitle,
-        company: exp.company,
-        duration: exp.duration,
-        description: exp.description
-      })),
-      education: formData.education.map(edu => ({
-        degree: edu.degree,
-        institution: edu.institution,
-        year: edu.year
-      })),
-      skills: formData.skills
-    };
-
-    // 🔍 Optional logs for debugging
-    console.log("📤 Sending data to backend:", requestData);
-
-    const res = await axios.post(`${apiUrl}/api/gemini/resume`, requestData, {
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 30000
-    });
-
-    console.log("✅ Server response:", res.data);
-
-    if (!res.data?.success || !res.data?.result) {
-      throw new Error(res.data?.error || 'Invalid response from server');
-    }
-
-    setGeneratedResume(res.data.result);
-    showToast('success', 'Resume generated successfully!');
-  } catch (error) {
-    console.error('Generation error:', error);
-    let errorMessage = 'Failed to generate resume';
-
-    if (error.response) {
-      if (error.response.status === 400) {
-        errorMessage = error.response.data?.message || 'Invalid data format.';
-      } else if (error.response.status === 500) {
-        errorMessage = 'Server error. Please try again later.';
-      } else {
-        errorMessage = error.response.data?.error || `Error ${error.response.status}`;
+  const generateResume = async () => {
+    setLoading(true);
+    try {
+      if (!isFormValid()) {
+        throw new Error('Please fill all required fields');
       }
-    } else if (error.message) {
-      errorMessage = error.message;
+
+      const requestData = {
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        summary: formData.summary,
+        experiences: formData.experiences.map(exp => ({
+          jobTitle: exp.jobTitle,
+          company: exp.company,
+          duration: exp.duration,
+          description: exp.description
+        })),
+        education: formData.education.map(edu => ({
+          degree: edu.degree,
+          institution: edu.institution,
+          year: edu.year
+        })),
+        skills: formData.skills
+      };
+
+      const res = await axios.post(`https://mern-career-canvas-2.onrender.com/api/gemini/resume`, requestData, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 30000
+      });
+
+      if (!res.data?.success || !res.data?.result) {
+        throw new Error(res.data?.error || 'Invalid response from server');
+      }
+
+      setGeneratedResume(res.data.result);
+      showToast('success', 'Resume generated successfully!');
+    } catch (error) {
+      console.error('Generation error:', error);
+      let errorMessage = 'Failed to generate resume';
+
+      if (error.response) {
+        if (error.response.status === 400) {
+          errorMessage = error.response.data?.message || 'Invalid data format.';
+        } else if (error.response.status === 500) {
+          errorMessage = 'Server error. Please try again later.';
+        } else {
+          errorMessage = error.response.data?.error || `Error ${error.response.status}`;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      showToast('error', errorMessage);
+    } finally {
+      setLoading(false);
     }
-
-    showToast('error', errorMessage);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const deleteResume = async () => {
     if (!selectedResume) return;
     
     if (window.confirm('Are you sure you want to delete this resume?')) {
       try {
-        await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/resumes/${selectedResume}`);
+        await axios.delete(`https://mern-career-canvas-2.onrender.com/api/resumes/${selectedResume}`);
         
         // Update the saved resumes list
-        const updatedResumes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/resumes/${user.id}`);
+        const updatedResumes = await axios.get(`https://mern-career-canvas-2.onrender.com/api/resumes/${user.id}`);
         setSavedResumes(updatedResumes.data);
         
         if (updatedResumes.data.length > 0) {
@@ -998,7 +988,5 @@ const generateResume = async () => {
 
     </div>
   );
-
- 
 
 }
