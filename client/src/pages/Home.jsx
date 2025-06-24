@@ -18,30 +18,31 @@ const [showVoicePrompt, setShowVoicePrompt] = useState(false);
     "https://www.ststechnicaljobs.com/wp-content/uploads/2024/01/Harnessing-AI-to-Elevate-Your-Resume-A-Guide-for-Job-Seekers.jpg",
   ];
  // ✅ Trigger modal if user is signed in and hasn't heard voice
-  useEffect(() => {
-    const alreadySpoken = sessionStorage.getItem("welcomePlayed");
-    if (user?.firstName && !alreadySpoken) {
-      setShowVoicePrompt(true);
-    }
-  }, [user]);
-
-  // ✅ Voice playback on button click
   const handlePlayVoice = () => {
-    if (!user?.firstName) return;
-    sessionStorage.setItem("welcomePlayed", "true");
-    setShowVoicePrompt(false);
+  if (!user?.firstName) return;
 
+  sessionStorage.setItem("welcomePlayed", "true");
+  setShowVoicePrompt(false);
+
+  // 👇 warm up
+  const silent = new SpeechSynthesisUtterance(" ");
+  silent.volume = 0;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(silent);
+
+  // 👇 small delay to allow warm-up before speaking
+  setTimeout(() => {
     const msg = new SpeechSynthesisUtterance(
       `Welcome ${user.firstName}, let's build your resume with AI.`
     );
     msg.lang = "en-US";
-    msg.pitch = 1;
-    msg.rate = 1;
     msg.volume = 1;
-
-    window.speechSynthesis.cancel();
+    msg.rate = 1;
+    msg.pitch = 1;
+    window.speechSynthesis.cancel(); // ensure no overlaps
     window.speechSynthesis.speak(msg);
-  };
+  }, 100); // 100ms delay works reliably
+};
 
 
   return (
