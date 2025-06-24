@@ -81,13 +81,13 @@
 // }
 
 // export default App;
-
 import { Routes, Route, Navigate } from "react-router-dom";
 import { SignIn, SignUp, SignedIn, SignedOut } from "@clerk/clerk-react";
 import Home from "./pages/Home";
 import Resume from "./pages/Resume";
 import CoverLetter from "./pages/CoverLetter";
 
+// 🔒 Protects routes based on auth state
 function ProtectedRoute({ children }) {
   return (
     <>
@@ -99,33 +99,34 @@ function ProtectedRoute({ children }) {
   );
 }
 
-// Auth Layout with beautiful golden gradient background
+// 🎨 Custom Auth Page Layout with Golden Gradient Background
 function AuthLayout({ children }) {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#fff7e6] via-[#ffeadd] to-[#fdf2f8]
- ">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#fff7e6] via-[#ffeadd] to-[#fdf2f8]">
       <div className="w-full max-w-md flex justify-center">{children}</div>
     </div>
   );
 }
 
+// 🎨 Clerk UI Styling
 const clerkAppearance = {
   elements: {
-    card: "bg-white/90 shadow-xl rounded-2xl px-6 py-8", // soften background
-    // formButtonPrimary: "bg-yellow-400 hover:bg-yellow-500 text-black rounded-md text-sm",
+    card: "bg-white/90 shadow-xl rounded-2xl px-6 py-8",
     headerTitle: "text-gray-800 text-xl font-bold",
     headerSubtitle: "text-gray-500 text-sm",
     socialButtonsBlockButton: "border-gray-300 text-gray-700",
     footerActionText: "text-sm text-gray-500",
-    footerActionLink: "text-yellow-600 hover:underline"
-  }
+    footerActionLink: "text-yellow-600 hover:underline",
+  },
 };
 
+// 🚀 Main App Component
 function App() {
   return (
     <div className="min-h-screen">
       <Routes>
-        {/* Sign In */}
+
+        {/* 👤 Sign In */}
         <Route
           path="/sign-in/*"
           element={
@@ -141,7 +142,7 @@ function App() {
           }
         />
 
-        {/* Sign Up */}
+        {/* 📝 Sign Up */}
         <Route
           path="/sign-up/*"
           element={
@@ -157,7 +158,7 @@ function App() {
           }
         />
 
-        {/* Protected Routes */}
+        {/* 🔒 Protected Routes */}
         <Route
           path="/"
           element={
@@ -182,6 +183,9 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* 🌐 Catch-All Route */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>
   );

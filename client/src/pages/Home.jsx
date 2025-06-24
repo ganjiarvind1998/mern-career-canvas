@@ -11,48 +11,37 @@ export default function Home() {
   const { user } = useUser(); // 👈 Clerk user
   const [isHovered, setIsHovered] = useState(null);
   const [currentImage, setCurrentImage] = useState(0);
-
+const [showVoicePrompt, setShowVoicePrompt] = useState(false);
   const images = [
     "https://magicalapi.com/blog/wp-content/uploads/2024/12/19-1248x702.jpg",
     "https://jobbloghq.com/wp-content/uploads/2024/05/AI-cover-letter-1030x589.jpg",
     "https://www.ststechnicaljobs.com/wp-content/uploads/2024/01/Harnessing-AI-to-Elevate-Your-Resume-A-Guide-for-Job-Seekers.jpg",
   ];
+ // ✅ Trigger modal if user is signed in and hasn't heard voice
+  useEffect(() => {
+    const alreadySpoken = sessionStorage.getItem("welcomePlayed");
+    if (user?.firstName && !alreadySpoken) {
+      setShowVoicePrompt(true);
+    }
+  }, [user]);
 
- const [showVoicePrompt, setShowVoicePrompt] = useState(false);
+  // ✅ Voice playback on button click
+  const handlePlayVoice = () => {
+    if (!user?.firstName) return;
+    sessionStorage.setItem("welcomePlayed", "true");
+    setShowVoicePrompt(false);
 
-useEffect(() => {
-  const alreadySpoken = sessionStorage.getItem("welcomePlayed");
+    const msg = new SpeechSynthesisUtterance(
+      `Welcome ${user.firstName}, let's build your resume with AI.`
+    );
+    msg.lang = "en-US";
+    msg.pitch = 1;
+    msg.rate = 1;
+    msg.volume = 1;
 
-  if (user?.firstName && !alreadySpoken) {
-    setShowVoicePrompt(true);
-  }
-}, [user]);
-
-const handlePlayVoice = () => {
-  const msg = new SpeechSynthesisUtterance(
-    `Welcome ${user.firstName}, let's build your resume with AI.`
-  );
-  msg.lang = "en-US";
-  msg.pitch = 1;
-  msg.rate = 1;
-  msg.volume = 1;
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(msg);
-
-  sessionStorage.setItem("welcomePlayed", "true");
-  setShowVoicePrompt(false);
-};
-
-
-
-
-
-
-
-
-
-
-
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(msg);
+  };
 
 
   return (
@@ -322,8 +311,8 @@ const handlePlayVoice = () => {
           {showVoicePrompt && (
   <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
     <div className="bg-white p-6 rounded-xl shadow-lg text-center">
-      <h2 className="text-lg font-bold mb-2">Welcome 👋</h2>
-      <p className="mb-4">Click to hear the welcome message</p>
+      <h2 className="text-lg font-bold mb-2">👋{user?.firstName}!</h2>
+      {/* <p className="mb-4">Click to hear the welcome message</p> */}
       <button
         onClick={handlePlayVoice}
         className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700"
